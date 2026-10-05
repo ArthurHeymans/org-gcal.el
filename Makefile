@@ -1,7 +1,7 @@
 THIS_MAKEFILE_DIR = $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 EMACS ?= emacs
 SRC=org-gcal.el org-generic-id.el
-TEST=test/org-gcal-test.el test/org-generic-id-test.el
+TEST=test/org-gcal-test.el test/org-generic-id-test.el test/org-gcal-async-test.el
 BUILD_LOG = build.log
 CASK ?= cask
 PKG_DIR := $(shell $(CASK) package-directory)

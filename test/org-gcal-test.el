@@ -706,7 +706,7 @@ Original second paragraph
      (with-mock
       (stub org-gcal--time-zone => '(0 "UTC"))
       (stub org-generic-id-add-location => nil)
-      (stub org-gcal--get-access-token => "my_access_token")
+      (stub org-gcal--get-access-token => (deferred:succeed "my_access_token"))
       (stub org-gcal--refresh-token => (deferred:succeed "test_access_token"))
       (stub request-deferred =>
             (deferred:succeed
@@ -752,7 +752,7 @@ Second paragraph
   "Verify that post-event callbacks report stale markers clearly."
   (let ((marker (org-gcal-test--stale-marker "* My event summary\n")))
     (cl-letf (((symbol-function 'org-gcal--get-access-token)
-               (lambda (_calendar-id) "my_access_token"))
+               (lambda (_calendar-id) (deferred:succeed "my_access_token")))
               ((symbol-function 'request-deferred)
                (lambda (&rest _args)
                  (deferred:succeed
@@ -1166,7 +1166,6 @@ CLOCK: [2019-06-06 Thu 17:00]--[2019-06-06 Thu 18:00] => 1:00
 (ert-deftest org-gcal-test--post-at-point-etag-no-id ()
   "Verify that ‘org-gcal-post-to-point’ fails if an ETag is present but
 an event ID is not."
-  :expected-result :failed
   (org-gcal-test--with-temp-buffer
    "\
 * My event summary
@@ -1187,10 +1186,11 @@ Second paragraph
    (with-mock
     (stub org-gcal--time-zone => '(0 "UTC"))
     (stub org-generic-id-add-location => nil)
-    (stub org-gcal--get-access-token => "my_access_token")
+    (stub org-gcal--get-access-token => (deferred:succeed "my_access_token"))
     (stub org-gcal--refresh-token => (deferred:succeed "test_access_token"))
     (stub request-deferred => (deferred:succeed nil))
-    (org-gcal-post-at-point))))
+    (org-gcal-test--should-error-match "Event cannot have ETag set when event ID absent"
+      (deferred:sync! (org-gcal-post-at-point))))))
 
 (ert-deftest org-gcal-test--post-at-point-time-date-range ()
   "Verify that entry with a time/date range for its timestamp is parsed by
@@ -1258,7 +1258,7 @@ Second paragraph
       (let ((deferred:debug t))
         (stub org-gcal--time-zone => '(0 "UTC")))
       (stub org-generic-id-add-location => nil)
-      (stub org-gcal--get-access-token => "my_access_token")
+      (stub org-gcal--get-access-token => (deferred:succeed "my_access_token"))
       (stub org-gcal--refresh-token => (deferred:succeed "test_access_token"))
       (stub y-or-n-p => t)
       (stub alert => t)
@@ -1281,7 +1281,7 @@ Second paragraph
       (let ((deferred:debug t))
         (stub org-gcal--time-zone => '(0 "UTC"))
         (stub org-generic-id-add-location => nil)
-        (stub org-gcal--get-access-token => "my_access_token")
+        (stub org-gcal--get-access-token => (deferred:succeed "my_access_token"))
         (stub org-gcal--refresh-token => (deferred:succeed "test_access_token"))
         (stub y-or-n-p => t)
         (stub request-deferred =>
@@ -1299,7 +1299,7 @@ Second paragraph
       (let ((deferred:debug t)
             (org-gcal-remove-api-cancelled-events t))
         (stub org-gcal--time-zone => '(0 "UTC"))
-        (stub org-gcal--get-access-token => "my_access_token")
+        (stub org-gcal--get-access-token => (deferred:succeed "my_access_token"))
         (stub org-gcal--refresh-token => (deferred:succeed "test_access_token"))
         (stub y-or-n-p => t)
         (stub request-deferred =>
@@ -1313,7 +1313,7 @@ Second paragraph
   "Verify delete-event reports stale markers clearly after HTTP 412."
   (let ((marker (org-gcal-test--stale-marker "* My event summary\n")))
     (cl-letf (((symbol-function 'org-gcal--get-access-token)
-               (lambda (_calendar-id) "my_access_token"))
+               (lambda (_calendar-id) (deferred:succeed "my_access_token")))
               ((symbol-function 'org-gcal--notify) #'ignore)
               ((symbol-function 'request-deferred)
                (lambda (&rest _args)
@@ -1348,7 +1348,7 @@ My event description
 :END:
 "
    (cl-letf (((symbol-function 'org-gcal--get-access-token)
-              (lambda (_calendar-id) "my_access_token"))
+              (lambda (_calendar-id) (deferred:succeed "my_access_token")))
              ((symbol-function 'y-or-n-p)
               (lambda (&rest _args) t))
              ((symbol-function 'org-gcal--delete-event)

@@ -490,6 +490,23 @@ This snippet uses `run-at-time` to perform a `org-gcal-sync` at specific times.
    nil))
 #+end_src
 
+* Asynchronous syncing
+
+Calendar requests and access-token lookups are chained asynchronously. The
+~deferred~ returned by ~org-gcal-sync~ tracks fetching and buffer updates; the
+sync lock is released when that work finishes, including on failure. Event
+imports and buffer updates yield to the Emacs event loop between entries.
+
+Token refresh also requires a version of ~oauth2-auto~ with asynchronous HTTP
+requests. Older versions call ~url-retrieve-synchronously~ internally, which
+still blocks Emacs despite the asynchronous token interface.
+
+This is cooperative scheduling, not a background Emacs thread. ID indexing,
+archiving, individual Org edits, and encrypted token-store access still run
+on the main thread. Large files or a passphrase prompt can therefore still
+cause pauses. Disabling ~org-gcal-auto-archive~ removes automatic archiving
+from the sync path if this is expensive in your setup.
+
 * Troubleshooting
 ** Debugging
 
